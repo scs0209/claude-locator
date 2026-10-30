@@ -75,11 +75,13 @@ In the desktop app, where `/plugin` does not run: click **+** next to the prompt
 | --- | --- | --- | --- |
 | **React** 18 · 19 | Vite plugin | ✅ JSX transform | ✅ fiber chain, with where each component is defined |
 | **Vue** 3 | Vite plugin | ✅ `.vue` template transform | ✅ component instances, with their files |
-| **Svelte** 5 | Vite plugin | ✅ Svelte's own dev records | ✅ each component usage |
+| **Svelte** 4 · 5 | Vite plugin | ✅ Svelte's own dev records | ✅ Svelte 5 component usages |
 | **Solid** · **Preact** | Vite plugin | ✅ JSX transform | ✅ by file |
 | **Astro** 5 · 7 | `vite-plugin-claude-locator/astro` | ✅ `.astro` template transform, and the islands | ✅ islands, then the `.astro` files around them |
 | **Angular** 20 | standalone server + page script | ✅ the owning component's class | ✅ component hosts |
 | Anything else (webpack, Next.js, …) | standalone server + page script | elements tagged by your build, or nothing | by file |
+
+Svelte 4 records the clicked element's source location, but does not retain the component-parent chain. Option+click therefore opens the element's file and line; Option+right-click does not show Svelte component ancestors. The Svelte 5 sample retains the component-usage tree.
 
 <details>
 <summary><b>Astro</b></summary>
@@ -209,7 +211,7 @@ claudeLocator({
 - **`'claude'` needs the desktop app**, with the session open in a window and the file inside its folder; the dev server's workspace root must be the session folder or below it. Every session watching that folder opens the file.
 - **Needs a keyboard.** No touch gesture yet.
 - **Angular** opens component classes, not template lines.
-- **Tested versions** (sample apps in `examples/`): React 18.3 and 19, Vue 3.5, Svelte 5, Solid 1.9, Preact 10, Astro 5.18 and 7.4, Angular 20. Svelte 4 keeps the same element records, so element lines should work there too, without the component chain; Astro 6 has not been tried.
+- **Sample versions** (apps in `examples/`): React 18.3 and 19, Vue 3.5, Svelte 4.2 and 5, Solid 1.9, Preact 10, Astro 5.18 and 7.4, Angular 20. Svelte 4 supports element locations only; its runtime metadata has no component-parent chain. Astro 6 has not been tried.
 - Only top-level components get a definition in the tree. Lowercase JSX tags that are not DOM elements (`@react-three/fiber`'s `<mesh>`) get the attribute too; list such files in `exclude`.
 
 ## Troubleshooting
@@ -241,6 +243,7 @@ pnpm install
 pnpm build && pnpm test          # the samples use the built package
 claude plugin test plugin        # the Claude Code plugin's tests
 pnpm dev:react19                 # or: pnpm --filter example-{react18,vue,svelte,solid,preact,astro,angular,demo} dev
+# Svelte 4 sample (after the root build): cd examples/svelte4 && pnpm install && pnpm dev
 CLAUDE_LOCATOR_OPEN=claude,editor CLAUDE_LOCATOR_EDITOR=cursor pnpm dev:react19
 node scripts/record-demo.mjs     # re-record docs/demo.gif from the demo site
 ```
