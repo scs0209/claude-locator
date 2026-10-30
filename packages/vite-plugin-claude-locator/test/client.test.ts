@@ -74,6 +74,31 @@ describe('findSource', () => {
   })
 })
 
+describe('Option+hover', () => {
+  it('shows a muted no-source outline and restores source styling', () => {
+    api = startInlined()
+    document.body.innerHTML = '<p>plain</p>'
+    const plain = document.querySelector('p') as Element
+    plain.dispatchEvent(new MouseEvent('mousemove', { bubbles: true, altKey: true }))
+
+    const box = Array.from(document.querySelectorAll<HTMLElement>('[data-claude-locator]')).find(
+      (element) => element.getAttribute('role') !== 'menu',
+    )!
+    const label = box.firstElementChild as HTMLElement
+    expect(box.style.display).toBe('block')
+    expect(label.textContent).toBe('no source here')
+    expect(box.style.borderColor).toBe('#6b6560')
+    expect(label.style.backgroundColor).toBe('#6b6560')
+
+    document.body.innerHTML += '<button data-claude-source="src/App.tsx:4:5">button</button>'
+    const button = document.querySelector('button') as Element
+    button.dispatchEvent(new MouseEvent('mousemove', { bubbles: true, altKey: true }))
+    expect(label.textContent).toContain('src/App.tsx:4')
+    expect(box.style.borderColor).toBe('#d97757')
+    expect(label.style.backgroundColor).toBe('#d97757')
+  })
+})
+
 describe('Option+click', () => {
   it('posts the location to the endpoint and stops the click reaching the app', async () => {
     const fetchMock = vi.fn().mockResolvedValue({ ok: true })

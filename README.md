@@ -22,7 +22,7 @@ You see the bug on the page; your agent needs the file. claude-locator turns "th
 
 The name comes from where it started, the Claude desktop app. It is not tied to Claude.
 
-- **⌥ + hover** outlines the element, with its component and `file:line`
+- **⌥ + hover** outlines the element, with its component and `file:line`, or a muted **no source here** label when no location is available
 - **⌥ + click** opens that line
 - **⌥ + right-click** lists the element and every component above it; open any of them
 - **React, Vue, Svelte, Solid, Preact, Astro and Angular** (React 18 and 19, Astro 5 and 7)
