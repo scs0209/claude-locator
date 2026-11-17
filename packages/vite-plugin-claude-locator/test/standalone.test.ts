@@ -56,7 +56,8 @@ describe('startStandaloneServer', () => {
     expect(response.headers.get('access-control-allow-origin')).toBe('http://localhost:4200')
     const signal = JSON.parse(fs.readFileSync(path.join(workspace, 'node_modules/.cache/claude-locator/open.json'), 'utf8'))
     expect(signal.file).toBe(path.join(workspace, 'apps/web/src/app/counter.ts'))
-    expect(lines).toContain('[claude-locator] apps/web/src/app/counter.ts:1 → claude')
+    const relativeFile = path.join('apps', 'web', 'src', 'app', 'counter.ts')
+    expect(lines).toContain(`[claude-locator] ${relativeFile}:1 → claude`)
   })
 
   it('refuses pages from elsewhere', async () => {

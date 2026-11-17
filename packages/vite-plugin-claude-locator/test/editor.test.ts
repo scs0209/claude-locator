@@ -69,27 +69,38 @@ describe('editorOpener', () => {
     )
   })
 
-  it('runs a real VS Code-family launcher with the workspace and the position', async () => {
-    const folder = fs.mkdtempSync(path.join(os.tmpdir(), 'claude-locator-code-'))
-    const record = path.join(folder, 'args.txt')
-    const fakeCode = path.join(folder, 'code')
-    fs.writeFileSync(fakeCode, `#!/bin/sh\necho "$@" > "${record}"\n`, { mode: 0o755 })
+  // This subprocess fixture is POSIX-only; the mocked spawn tests above verify the launcher arguments on Windows.
+  it.skipIf(process.platform === 'win32')(
+    'runs a real VS Code-family launcher with the workspace and the position',
+    async () => {
+      const folder = fs.mkdtempSync(path.join(os.tmpdir(), 'claude-locator-code-'))
+      const record = path.join(folder, 'args.txt')
+      const fakeCode = path.join(folder, 'code')
+      fs.writeFileSync(fakeCode, `#!/bin/sh\necho "$@" > "${record}"\n`, { mode: 0o755 })
 
-    await editorOpener(fakeCode, { workspaceRoot: '/repo', window: 'project' })(signal)
-    await vi.waitFor(() => expect(fs.existsSync(record) && fs.readFileSync(record, 'utf8')).toBe('/repo -g /repo/src/App.tsx:12:3\n'))
-    fs.rmSync(folder, { recursive: true, force: true })
-  })
+      await editorOpener(fakeCode, { workspaceRoot: '/repo', window: 'project' })(signal)
+      await vi.waitFor(() =>
+        expect(fs.existsSync(record) && fs.readFileSync(record, 'utf8')).toBe('/repo -g /repo/src/App.tsx:12:3\n'),
+      )
+      fs.rmSync(folder, { recursive: true, force: true })
+    },
+  )
 
   it('runs the real launcher with the file it was given', async () => {
     const folder = fs.mkdtempSync(path.join(os.tmpdir(), 'claude-locator-editor-'))
     const record = path.join(folder, 'args.txt')
-    const fakeEditor = path.join(folder, 'fake-editor')
-    fs.writeFileSync(fakeEditor, `#!/bin/sh\necho "$@" > "${record}"\n`, { mode: 0o755 })
+    const fakeEditor = path.join(folder, `fake-editor${process.platform === 'win32' ? '.cmd' : ''}`)
+    const launcher =
+      process.platform === 'win32'
+        ? `@echo off\r\n> "${record}" echo %*\r\n`
+        : `#!/bin/sh\necho "$@" > "${record}"\n`
+    fs.writeFileSync(fakeEditor, launcher, { mode: 0o755 })
     // launch-editor skips a file that does not exist
     const source = path.join(folder, 'App.tsx')
     fs.writeFileSync(source, '')
 
-    await editorOpener(fakeEditor, { workspaceRoot: folder })({ ...signal, file: source })
+    const editor = process.platform === 'win32' ? `"${fakeEditor}"` : fakeEditor
+    await editorOpener(editor, { workspaceRoot: folder })({ ...signal, file: source })
     await vi.waitFor(() => expect(fs.existsSync(record)).toBe(true))
     expect(fs.readFileSync(record, 'utf8')).toContain(source)
     fs.rmSync(folder, { recursive: true, force: true })
